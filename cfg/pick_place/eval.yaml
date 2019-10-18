@@ -1,0 +1,15 @@
+include:
+  - cfg/pick_place/base/train_dropout.yaml
+
+env_id: FetchOneGoalPickPlaceBetterDense-v0
+render: True
+render_eval: True
+noise_type: normal_0.0000001 # can try null here, may need a bit of debugging
+
+load_path: tmp/model_hour_11.pkl
+nb_train_steps: 0  # per epoch cycle and MPI worker
+nb_rollout_steps: 200  # per epoch cycle and MPI worker
+nb_eval_steps: 200  # per epoch cycle and MPI worker
+log_interval: 1
+verbose: 1
+do_eval: True

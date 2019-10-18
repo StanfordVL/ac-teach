@@ -1,0 +1,9 @@
+include:
+  - cfg/path/base/train.yaml
+  - cfg/path/teachers/random.yaml
+
+teach_behavior_policy: only_teacher
+nb_train_steps: 0
+nb_eval_steps: 0
+
+experiment_name: random

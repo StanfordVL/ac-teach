@@ -1,0 +1,6 @@
+include:
+  - cfg/path/base/train_dropout.yaml
+  - cfg/path/teachers/partial_complete_suboptimal_random4.yaml
+  - cfg/path/behavior_policies/dqn.yaml
+
+experiment_name: sensitivity_bad_teachers_1random_dqn

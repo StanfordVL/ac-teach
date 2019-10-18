@@ -1,0 +1,27 @@
+teach_behavior_policy: dqn
+
+behavior_policy_params:
+    commit_time: 0
+    do_exploration: True
+    num_timesteps: 100000
+
+    dqn_params:
+        gamma: 0.99
+        learning_rate: 5.0e-4
+        buffer_size: 100000
+        exploration_fraction: 0.1
+        exploration_final_eps: 0.02
+        train_freq: 10
+        batch_size: 32
+        checkpoint_freq: 10000
+        checkpoint_path: null
+        learning_starts: 100
+        target_network_update_freq: 1000
+        prioritized_replay: False
+        prioritized_replay_alpha: 0.6
+        prioritized_replay_beta0: 0.4
+        prioritized_replay_beta_iters: 3000000
+        prioritized_replay_eps: 1.0e-6
+        param_noise: False
+        verbose: 1
+        full_tensorboard_log: False

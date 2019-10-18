@@ -1,0 +1,6 @@
+include:
+  - cfg/hook/base/train_dropout.yaml
+  - cfg/hook/teachers/full_optimal.yaml
+  - cfg/behavior_policies/acteach.yaml
+
+experiment_name: efficiency_full_optimal_ours

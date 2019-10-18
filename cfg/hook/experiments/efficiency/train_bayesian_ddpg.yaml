@@ -1,0 +1,4 @@
+include:
+  - cfg/hook/base/train_dropout.yaml
+
+experiment_name: efficiency_no_teachers_ddpg

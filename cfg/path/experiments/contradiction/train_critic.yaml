@@ -1,0 +1,6 @@
+include:
+  - cfg/path/base/train.yaml
+  - cfg/path/teachers/partial_complete_halfway.yaml
+  - cfg/behavioral_policies/critic.yaml
+
+experiment_name: contradiction_halfway_ddpgcritic

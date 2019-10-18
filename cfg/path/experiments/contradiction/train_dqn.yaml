@@ -1,0 +1,6 @@
+include:
+  - cfg/path/base/train_dropout.yaml
+  - cfg/path/teachers/partial_complete_halfway.yaml
+  - cfg/behavioral_policies/dqn.yaml
+
+experiment_name: contradiction_halfway_dqn

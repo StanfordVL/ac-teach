@@ -1,0 +1,6 @@
+include:
+  - cfg/path/base/train_dropout.yaml
+  - cfg/path/teachers/full_optimal.yaml
+  - cfg/behavior_policies/random.yaml
+
+experiment_name: efficiency_1full_optimal_random

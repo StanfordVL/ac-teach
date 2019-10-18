@@ -1,0 +1,6 @@
+include:
+  - cfg/pick_place/base/train_dropout.yaml
+  - cfg/pick_place/teachers/full_optimal.yaml
+  - cfg/behavior_policies/dqn.yaml
+
+experiment_name: efficiency_1full_optimal_dqn

@@ -1,0 +1,15 @@
+include:
+  - cfg/path/base/train_dropout.yaml
+  - cfg/path/teachers/partial_complete_suboptimal.yaml
+
+teach_behavior_policy: dropout_critic
+use_meta_target: True
+
+behavior_policy_params:
+    commitment_thresh_teacher: 0.6
+    commitment_thresh_student: 0.6
+    with_commitment: True
+    use_learner: True
+    commitment_decay_coeff: 0.98
+
+experiment_name: efficiency_4partial_noisy_ours

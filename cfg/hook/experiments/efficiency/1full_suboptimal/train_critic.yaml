@@ -1,0 +1,6 @@
+include:
+  - cfg/hook/base/train.yaml
+  - cfg/behavior_policies/critic.yaml
+  - cfg/hook/teachers/full_suboptimal.yaml
+
+experiment_name: efficiency_full_suboptimal_ddpgcritic

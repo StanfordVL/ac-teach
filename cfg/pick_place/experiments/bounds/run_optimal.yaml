@@ -1,0 +1,7 @@
+include:
+  - cfg/pick_place/base/train.yaml
+  - cfg/pick_place/teachers/full_optimal.yaml
+
+teach_behavior_policy: only_teacher
+nb_train_steps: 0
+nb_eval_steps: 0

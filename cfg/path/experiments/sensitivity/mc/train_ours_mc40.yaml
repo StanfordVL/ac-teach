@@ -1,0 +1,10 @@
+include:
+  - cfg/path/experiments/ablation/train_ours.yaml
+
+policy_kwargs:
+    dropout_keep_prob: 0.8
+    mc_samples: 40
+    layer_norm: True
+    feature_extraction: mlp # Can be mlp or cnn
+
+experiment_name: sensitivity_mc_40

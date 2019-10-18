@@ -1,0 +1,6 @@
+include:
+  - cfg/hook/base/train_dropout.yaml
+  - cfg/behavior_policies/random.yaml
+  - cfg/hook/teachers/full_suboptimal.yaml
+
+experiment_name: efficiency_full_suboptimal_random

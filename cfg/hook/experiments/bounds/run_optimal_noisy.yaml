@@ -1,0 +1,7 @@
+include:
+  - cfg/hook/base/train.yaml
+  - cfg/hook/teachers/full_suboptimal.yaml
+
+teach_behavior_policy: only_teacher
+nb_train_steps: 0
+nb_eval_steps: 0

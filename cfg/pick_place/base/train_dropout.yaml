@@ -1,0 +1,41 @@
+env_id: OneGoalPickPlaceDenseEnv-v0
+learner_type: Dropout DDPG
+render: False
+render_eval: False
+normalize_returns: False
+normalize_observations: False
+seed: next
+critic_l2_reg: 0.0
+action_l2: 0.1
+tau: 0.001
+batch_size: 128  # per MPI worker
+actor_lr: 0.0001
+critic_lr: 0.001
+enable_popart: False
+gamma: 0.99
+reward_scale: 1
+clip_norm: null
+noise_type: normal_0.2 # choices are adaptive-param_xx, ou_xx, normal_xx, none
+load_path: null
+
+memory_limit: 1000000
+nb_train_steps: 50  # per epoch cycle and MPI worker
+nb_rollout_steps: 200  # per epoch cycle and MPI worker
+num_timesteps: 500000
+nb_eval_steps: 100  # per epoch cycle and MPI worker
+log_interval: 25
+verbose: 1
+do_eval: True
+
+use_meta_target: False
+teach_behavior_policy: null
+
+dropout_tau: 10.0
+include_mc_stats: True
+
+policy_kwargs:
+    dropout_keep_prob: 0.9
+    layers: [64, 64, 64]
+    mc_samples: 50
+    layer_norm: True
+    feature_extraction: mlp # Can be mlp or cnn

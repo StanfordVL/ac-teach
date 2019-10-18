@@ -1,0 +1,4 @@
+teachers:
+  - type: pick&place
+    noise_type: normal_0.1
+    num_random: 1

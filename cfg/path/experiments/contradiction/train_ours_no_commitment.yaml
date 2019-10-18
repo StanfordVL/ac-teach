@@ -1,0 +1,13 @@
+include:
+  - cfg/path/base/train_dropout.yaml
+  - cfg/path/teachers/partial_complete_halfway.yaml
+
+teach_behavior_policy: acteach
+use_meta_target: True
+
+behavior_policy_params:
+    commitment: 0.6
+    with_commitment: False
+    use_learner: True
+
+experiment_name: contradiction_halfway_oursnocommit

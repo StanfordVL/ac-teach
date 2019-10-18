@@ -1,0 +1,4 @@
+teach_behavior_policy: random
+
+behavior_policy_params:
+    commit_per_episode: False

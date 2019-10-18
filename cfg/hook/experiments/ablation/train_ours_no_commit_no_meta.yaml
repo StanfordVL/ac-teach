@@ -1,0 +1,15 @@
+include:
+  - cfg/hook/base/train_dropout.yaml
+  - cfg/hook/teachers/partial_sufficient_suboptimal.yaml
+
+teach_behavior_policy: dropout_critic
+use_meta_target: False
+
+behavior_policy_params:
+    commitment_thresh_teacher: 0.6
+    commitment_thresh_student: 0.6
+    with_commitment: True
+    use_learner: True
+    decay_commitment: False
+
+experiment_name: ablation_no_commit_no_meta

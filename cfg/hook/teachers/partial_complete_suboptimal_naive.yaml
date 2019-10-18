@@ -1,0 +1,3 @@
+teachers:
+  - type: partial_naive
+    noise_type: normal_0.1

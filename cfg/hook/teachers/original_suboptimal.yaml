@@ -1,0 +1,3 @@
+teachers:
+  - type: original
+    noise_type: normal_0.1

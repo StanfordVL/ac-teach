@@ -1,0 +1,4 @@
+teachers:
+  - type: one_goal
+    noise_type: normal_1.0
+    num_random: 2

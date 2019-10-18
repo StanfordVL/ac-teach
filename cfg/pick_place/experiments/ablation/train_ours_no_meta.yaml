@@ -1,0 +1,13 @@
+include:
+  - cfg/pick_place/base/train_dropout.yaml
+  - cfg/pick_place/teachers/partial_complete_suboptimal.yaml
+
+teach_behavior_policy: acteach
+use_meta_target: False
+
+behavior_policy_params:
+    commitment_thresh: 0.6
+    with_commitment: True
+    use_learner: True
+
+experiment_name: ablation_no_meta

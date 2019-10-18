@@ -1,0 +1,4 @@
+teach_behavior_policy: critic
+
+behavior_policy_params:
+    use_learner: True

@@ -1,0 +1,7 @@
+include:
+  - cfg/path/base/train.yaml
+  - cfg/path/teachers/partial_incomplete2_optimal.yaml
+  - cfg/behavior_policies/critic.yaml
+
+
+experiment_name: efficiency_partial_incomplete2_optimal_ddpgcritic

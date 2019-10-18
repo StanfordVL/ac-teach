@@ -1,0 +1,6 @@
+include:
+  - cfg/path/base/train_dropout.yaml
+  - cfg/path/teachers/partial_incomplete2_optimal.yaml
+  - cfg/behavior_policies/acteach.yaml
+
+experiment_name: efficiency_partial_incomplete2_optimal_ours

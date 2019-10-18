@@ -1,0 +1,4 @@
+include:
+  - cfg/path/base/train_ddpgfd.yaml
+
+experiment_name: efficiency_4partial_noisy_ddpgfd

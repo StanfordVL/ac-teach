@@ -1,0 +1,6 @@
+include:
+  - cfg/hook/base/train.yaml
+  - cfg/behavior_policies/critic.yaml
+  - cfg/hook/teachers/partial_sufficient_suboptimal.yaml
+
+experiment_name: efficiency_partial_sufficient_suboptimal_ddpgcritic

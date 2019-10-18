@@ -1,0 +1,9 @@
+include:
+  - cfg/path/experiments/ablation/train_ours.yaml
+
+behavior_policy_params:
+    commitment_thresh: 0.7
+    with_commitment: True
+    use_learner: True
+
+experiment_name: sensitivity_commit_thresh_07

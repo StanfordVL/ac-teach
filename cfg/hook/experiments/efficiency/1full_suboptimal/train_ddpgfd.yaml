@@ -1,0 +1,4 @@
+include:
+  - cfg/mujoco/base/train_ddpgfd.yaml
+
+experiment_name: efficiency_full_optimal_ddpgfd

@@ -1,0 +1,5 @@
+include:
+  - cfg/path/experiments/ablation/train_ours.yaml
+
+dropout_tau: 100.0
+experiment_name: sensitivity_tau_100

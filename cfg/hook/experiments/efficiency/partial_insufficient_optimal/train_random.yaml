@@ -1,0 +1,6 @@
+include:
+  - cfg/hook/base/train_dropout.yaml
+  - cfg/behavior_policies/random.yaml
+  - cfg/hook/teachers/partial_insufficient_optimal.yaml
+
+experiment_name: efficiency_partial_insufficient_optimal_random
