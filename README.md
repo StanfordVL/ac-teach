@@ -50,11 +50,11 @@ A jupyter notebook, 'Analyze Logs.ipynb', is also included under the scripts dir
 
 ## Adding a new environment or new teachers
 
-You can copy the structure of the configs from another environment into `cfg/your_environment` and make sure the environment is registered with Gym (see [here](https://github.com/StanfordVL/rl-with-teachers/blob/master/src/rl_with_teachers/envs/pick_place.py#L101) for example).
+You can copy the structure of the configs from another environment into `cfg/your_environment` and make sure the environment is registered with Gym (see [here](https://github.com/StanfordVL/ac-teach/blob/master/src/rl_with_teachers/envs/pick_place.py#L101) for example).
 
-Then, you should add a file under `src/rl-with-teachers/teachers/` (see [here](https://github.com/StanfordVL/rl-with-teachers/blob/master/src/rl_with_teachers/teachers/pick_place.py) for an example).
+Then, you should add a file under `src/ac-teach/teachers/` (see [here](https://github.com/StanfordVL/ac-teach/blob/master/src/rl_with_teachers/teachers/pick_place.py) for an example).
 
-Finally, ensure your environment has a `make_teachers` function (see [here](https://github.com/StanfordVL/rl-with-teachers/blob/master/src/rl_with_teachers/envs/pick_place.py#L86) for an example) that associates the `type` string argument with a set of teachers. This argument can be specified in `cfg/your_environment/teachers/your_teacher_config.yaml` ([here](https://github.com/StanfordVL/rl-with-teachers/blob/master/cfg/pick_place/teachers/partial_complete_suboptimal.yaml) is an example), and you can link this teacher configuration to your main configuration ([example](https://github.com/StanfordVL/rl-with-teachers/blob/master/cfg/pick_place/experiments/efficiency/partial_complete_suboptimal/train_ours.yaml#L3)).
+Finally, ensure your environment has a `make_teachers` function (see [here](https://github.com/StanfordVL/ac-teach/blob/master/src/rl_with_teachers/envs/pick_place.py#L86) for an example) that associates the `type` string argument with a set of teachers. This argument can be specified in `cfg/your_environment/teachers/your_teacher_config.yaml` ([here](https://github.com/StanfordVL/ac-teach/blob/master/cfg/pick_place/teachers/partial_complete_suboptimal.yaml) is an example), and you can link this teacher configuration to your main configuration ([example](https://github.com/StanfordVL/ac-teach/blob/master/cfg/pick_place/experiments/efficiency/partial_complete_suboptimal/train_ours.yaml#L3)).
 
 
 ## Experimenting with AC-Teach algorithm
