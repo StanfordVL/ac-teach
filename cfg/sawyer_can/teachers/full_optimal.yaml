@@ -1,0 +1,4 @@
+teachers:
+  - type: optimal
+  - env: SawyerPickPlaceCan
+  - agent: "/home/robot/installed_libraries/batchRL/iris_trained_models/"

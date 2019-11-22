@@ -7,6 +7,8 @@ from stable_baselines.deepq.replay_buffer import ReplayBuffer, PrioritizedReplay
 from stable_baselines.common.schedules import LinearSchedule
 from rl_with_teachers.utils import parse_noise_types
 
+from rl_with_teachers.envs.util import create_robosuite_env
+
 def make_behavior_policy(env_id, base_env, learner, teach_behavior_policy, teachers_conf, behavior_policy_params):
     """
     Create a behavioral policy for training.
@@ -37,7 +39,8 @@ def make_behavior_policy(env_id, base_env, learner, teach_behavior_policy, teach
             else:
                 teacher_fns = [lambda obs: pretrained_agent.predict(obs, deterministic=False)[0]/np.abs(learner.action_space.low)]
         else:
-            teacher_fns = base_env.make_teachers(teacher_conf.pop('type'), noise, **teacher_conf)
+            print(teacher_conf)
+            teacher_fns = base_env.make_teachers(type=teacher_conf.pop('type'), noise=noise, **teacher_conf)
         teachers+=teacher_fns
 
     if teach_behavior_policy == 'random':
@@ -53,7 +56,13 @@ def make_behavior_policy(env_id, base_env, learner, teach_behavior_policy, teach
             behavior_policy = OptimalReachBehaviorPolicy(learner, teachers)
 
     elif teach_behavior_policy == 'dqn' or teach_behavior_policy == 'bdqn':
-        dqn_env = gym.make(env_id)
+
+        # hacky support for Sawyer envs
+        if env_id.startswith("Sawyer"):
+            dqn_env = create_robosuite_env(env_id, horizon=1000)
+        else:
+            dqn_env = gym.make(env_id)
+
         if 'use_learner' not in behavior_policy_params or behavior_policy_params['use_learner']:
             dqn_env.action_space = spaces.Discrete(len(teachers)+1)
         else:
@@ -388,7 +397,8 @@ class ACTeachBehaviorPolicy(RLwTeachersBehaviorPolicy):
     def __init__(self, env, learner, teachers, uncertainty_model,
                        use_learner=True,
                        commitment_thresh=0.6, with_commitment = True,
-                       decay_commitment=True, commitment_decay_coeff = 0.99):
+                       decay_commitment=True, commitment_decay_coeff = 0.99,
+                       policy_choice_repeat=1):
         super(ACTeachBehaviorPolicy, self).__init__(env, learner, teachers, use_learner=use_learner)
         self.num_choice_steps = 0
         self.uncertainty_model = uncertainty_model
@@ -398,6 +408,10 @@ class ACTeachBehaviorPolicy(RLwTeachersBehaviorPolicy):
         self.num_steps_commited = 0
         self.decay_commitment = decay_commitment
         self.commitment_decay_coeff = commitment_decay_coeff
+
+        # for repeating actions from the same policy for several timesteps
+        self.policy_choice_repeat = policy_choice_repeat
+        self.policy_choice_count = 0
 
     def choose_action(self, obs):
         learner_action = self.get_action(0, obs, with_exploration=True)
@@ -417,6 +431,19 @@ class ACTeachBehaviorPolicy(RLwTeachersBehaviorPolicy):
         max_q_choice = np.argmax(qs)
         if self.current_policy_choice is None:
             self.current_policy_choice = max_q_choice
+
+        ### added, for repeating actions from the same policy for several timesteps ###
+        if self.policy_choice_repeat > 1:
+            self.policy_choice_count += 1
+
+            if self.policy_choice_count == self.policy_choice_repeat:
+                # refresh count and allow new action
+                self.policy_choice_count = 0
+            else:
+                # keep old policy choice
+                agent_choice = self.current_policy_choice
+                self.num_choice_steps += 1
+                return agent_choice, actions[agent_choice], qs[agent_choice]
 
         # If using commitment and current max choice is not same as last time, need to choose whether to switch
         if self.with_commitment and self.current_policy_choice != max_q_choice:
@@ -479,3 +506,4 @@ class ACTeachBehaviorPolicy(RLwTeachersBehaviorPolicy):
         super().reset()
         self.current_policy_choice = None
         self.num_steps_commited = 0
+        self.policy_choice_count = 0

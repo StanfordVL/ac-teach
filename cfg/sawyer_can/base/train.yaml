@@ -1,0 +1,39 @@
+env_id: SawyerPickPlaceCan
+learner_type: DDPG
+render: False
+render_eval: False
+normalize_returns: False
+normalize_observations: False
+seed: next
+tau: 0.001
+critic_l2_reg: 0.0
+batch_size: 128  # per MPI worker
+actor_lr: 0.0001
+critic_lr: 0.001
+enable_popart: False
+gamma: 0.99
+reward_scale: 1
+clip_norm: null
+noise_type: normal_0.2 # choices are adaptive-param_xx, ou_xx, normal_xx, none
+load_path: null
+
+memory_limit: 1000000
+nb_train_steps: 50  # per epoch cycle and MPI worker
+nb_rollout_steps: 200  # per epoch cycle and MPI worker
+num_timesteps: 500000
+nb_eval_steps: 100  # per epoch cycle and MPI worker
+log_interval: 25
+verbose: 1
+do_eval: True
+
+use_meta_target: False
+teach_behavior_policy: null
+
+policy_kwargs:
+    layer_norm: True
+    layers: [64, 64, 64]
+    feature_extraction: mlp # Can be mlp or cnn
+
+env_params:
+    shuffle_order: True
+    render_q_quiver: True

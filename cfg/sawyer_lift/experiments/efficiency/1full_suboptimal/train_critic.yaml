@@ -1,0 +1,6 @@
+include:
+  - cfg/sawyer_lift/base/train.yaml
+  - cfg/sawyer_lift/teachers/full_suboptimal.yaml
+  - cfg/behavior_policies/critic.yaml
+
+experiment_name: efficiency_1full_suboptimal_ddpgcritic
