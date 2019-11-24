@@ -167,6 +167,9 @@ class RobosuiteEnv:
     def _check_success(self):
         return self.env._check_success()
 
+    def close(self):
+        self.env.close()
+
     def make_teachers(self, type, env, agent, noise=None):
         if type == 'optimal':
             return [IRISAgent(env=env, agent=agent, noise=noise)]

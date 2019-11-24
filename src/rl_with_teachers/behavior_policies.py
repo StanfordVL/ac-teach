@@ -556,7 +556,7 @@ class ACTeachBehaviorPolicy(RLwTeachersBehaviorPolicy):
 
         # # uncomment this and comment block below to always select the teacher
         # agent_choice = 1
-
+        
         # If using commitment and current max choice is not same as last time, need to choose whether to switch
         if self.with_commitment and self.current_policy_choice != max_q_choice:
             current_qs = self.uncertainty_model.q_values(obs[None], actions[self.current_policy_choice][None])
