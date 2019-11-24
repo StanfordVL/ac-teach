@@ -23,7 +23,7 @@ from rlkit.data_management.demo_buffer import DemoBuffer
 
 import robosuite
 
-class OptimalPickPlaceAgent(TeacherPolicy):
+class OptimalPickPlaceAgent():
     """
     For Fetch reach environment with single start and goal. This agent
     reaches for the goal position unconditionally.
@@ -34,7 +34,7 @@ class OptimalPickPlaceAgent(TeacherPolicy):
         self.picker = PickAgent(return_to_start=True)
         self.placer = PlaceAgent(goal)
 
-    def __call__(self, obs):
+    def get_action(self, obs):
         cube_pos = obs[3:6]
         goal_pos = obs[-6:-3]
         achieved = np.linalg.norm(goal_pos - cube_pos) < 0.01
@@ -52,7 +52,7 @@ class OptimalPickPlaceAgent(TeacherPolicy):
         self.picker.reset()
         self.placer.reset()
 
-class PickAgent(TeacherPolicy):
+class PickAgent():
     """
     For Fetch PickAndPlace environment with single cube position and goal.
     This agent always tries to pick up the cube in a fashion similar
@@ -151,7 +151,7 @@ class PickAgent(TeacherPolicy):
         return noisy_action
 
 
-class PlaceAgent(TeacherPolicy):
+class PlaceAgent():
     """
     For Fetch PickAndPlace environment with single cube position and goal.
     This agent assumes that it already has the cube grasped and just follows a
@@ -302,7 +302,7 @@ class FetchOneGoalPickPlaceEnv(pick_and_place.FetchPickAndPlaceEnv):
         return goal
 
     def make_teachers(self):
-        return [OptimalPickPlaceAgent(self.goal, noise)]
+        return [OptimalPickPlaceAgent(self.goal)]
 
 # register(
 #         id='OneGoalPickPlaceEnv-v0',
@@ -335,7 +335,7 @@ class ACTeachBehaviorPolicy:
 
         # score each action using value function and pick the best one
         obs_stacked = np.tile(obs, (len(actions), 1))
-        values = eval_np(module=self.value_function, obs_stacked, actions)
+        values = eval_np(self.value_function, obs_stacked, actions)
         max_q_choice = np.argmax(values)
         self.current_policy_choice = max_q_choice
         return actions[max_q_choice], {}
@@ -459,16 +459,19 @@ def experiment(variant):
     render = variant["render"]
     render_eval = variant["render_eval"]
 
-    expl_env = create_robosuite_env(
-        env_name=env_name, 
-        horizon=horizon, 
-        render=render,
-    )
-    eval_env = create_robosuite_env(
-        env_name=env_name, 
-        horizon=eval_horizon,
-        render=render_eval 
-    )
+    expl_env = FetchOneGoalPickPlaceEnv(sparse=False)
+    eval_env = FetchOneGoalPickPlaceEnv(sparse=False)
+
+    # expl_env = create_robosuite_env(
+    #     env_name=env_name, 
+    #     horizon=horizon, 
+    #     render=render,
+    # )
+    # eval_env = create_robosuite_env(
+    #     env_name=env_name, 
+    #     horizon=eval_horizon,
+    #     render=render_eval 
+    # )
     # expl_env = NormalizedBoxEnv(HalfCheetahEnv())
     # eval_env = NormalizedBoxEnv(HalfCheetahEnv())
 
