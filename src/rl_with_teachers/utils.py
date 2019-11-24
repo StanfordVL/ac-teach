@@ -114,7 +114,7 @@ def init_logging(log_dir):
     path = osp.join(log_dir, 'tb_hists')
     TB_LOGGER = TensorBoardLogging(path)
     configure_std_logging()
-    configure_file_logging(log_dir, format_strs=[None], name='log', log_suffix='')
+    # configure_file_logging(log_dir, format_strs=[None], name='log', log_suffix='')
 
 def log_images(images):
     TB_LOGGER.write_images(images)

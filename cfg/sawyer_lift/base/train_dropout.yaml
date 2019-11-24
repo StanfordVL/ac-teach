@@ -20,9 +20,9 @@ load_path: null
 
 memory_limit: 1000000
 nb_train_steps: 50  # per epoch cycle and MPI worker
-nb_rollout_steps: 200  # per epoch cycle and MPI worker
+nb_rollout_steps: 1000 #200  # per epoch cycle and MPI worker
 num_timesteps: 500000
-nb_eval_steps: 100  # per epoch cycle and MPI worker
+nb_eval_steps: 1000 #100  # per epoch cycle and MPI worker
 log_interval: 25
 verbose: 1
 do_eval: True

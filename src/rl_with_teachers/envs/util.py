@@ -23,7 +23,7 @@ def make_envs(env_id, do_eval, seed, conf, normalize_observations=False, normali
 
     # hacky support for Sawyer envs
     if env_id.startswith("Sawyer"):
-        env = base_env = create_robosuite_env(env_id, horizon=1000)
+        env = base_env = create_robosuite_env(env_id, horizon=1000, render=conf['render'])
     else:
         env = base_env = gym.make(env_id)
 
@@ -31,7 +31,7 @@ def make_envs(env_id, do_eval, seed, conf, normalize_observations=False, normali
             base_env = base_env.env
     for attr in env_params:
         setattr(base_env, attr, env_params[attr])
-    env = bench.Monitor(env, logger.get_dir(), allow_early_resets=True)
+    # env = bench.Monitor(env, logger.get_dir(), allow_early_resets=True)
 
     # Seed everything to make things reproducible.
     logger.info('seed={}, logdir={}'.format(seed, logger.get_dir()))
@@ -46,7 +46,7 @@ def make_envs(env_id, do_eval, seed, conf, normalize_observations=False, normali
     if do_eval:
         # hacky support for Sawyer envs
         if env_id.startswith("Sawyer"):
-            eval_env = base_eval_env = create_robosuite_env(env_id, horizon=1000)
+            eval_env = base_eval_env = create_robosuite_env(env_id, horizon=1000, render=conf['render_eval'])
         else:
             eval_env = base_eval_env = gym.make(env_id)
 
@@ -54,7 +54,7 @@ def make_envs(env_id, do_eval, seed, conf, normalize_observations=False, normali
                 base_eval_env = base_eval_env.env
         for attr in env_params:
             setattr(base_eval_env, attr, env_params[attr])
-        eval_env = bench.Monitor(eval_env, os.path.join(logger.get_dir(), 'gym_eval'), allow_early_resets=True)
+        # eval_env = bench.Monitor(eval_env, os.path.join(logger.get_dir(), 'gym_eval'), allow_early_resets=True)
         eval_env.seed(seed)
         eval_env.base_env = base_eval_env
     else:
@@ -64,7 +64,7 @@ def make_envs(env_id, do_eval, seed, conf, normalize_observations=False, normali
 
     return base_env, env, base_eval_env, eval_env
 
-def create_robosuite_env(env_name, horizon=1000):
+def create_robosuite_env(env_name, horizon=1000, render=False):
 
     # use visual versions of environments for training by default
     env_name = env_name[:6] + "Visual" + env_name[6:]
@@ -74,7 +74,7 @@ def create_robosuite_env(env_name, horizon=1000):
 
     env = robosuite.make(
         env_name,
-        has_renderer=False,
+        has_renderer=render,
         has_offscreen_renderer=False,
         ignore_done=False,
         use_object_obs=True,
@@ -124,6 +124,8 @@ class RobosuiteEnv:
         self.reward_range = (-float('inf'), float('inf'))
         self.spec = None
 
+        self.robosuite = True
+
     def _flatten_obs(self, obs_dict, verbose=False):
         """
         Filters keys of interest out and concatenate the information.
@@ -146,6 +148,9 @@ class RobosuiteEnv:
         self.env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
         ob_dict = self.env._get_observation()
 
+        if self.env.has_renderer:
+            self.env.viewer.set_camera(0)
+
         return self._flatten_obs(ob_dict)
 
     def step(self, action):
@@ -158,6 +163,9 @@ class RobosuiteEnv:
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
+
+    def _check_success(self):
+        return self.env._check_success()
 
     def make_teachers(self, type, env, agent, noise=None):
         if type == 'optimal':

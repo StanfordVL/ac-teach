@@ -74,7 +74,6 @@ class IRISAgent(TeacherPolicy):
         action = self.apply_noise(action)
         return action
 
-
     def reset(self):
         self.iris_algo.reset_external()
 

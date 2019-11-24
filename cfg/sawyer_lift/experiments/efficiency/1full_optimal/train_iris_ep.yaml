@@ -1,0 +1,6 @@
+include:
+  - cfg/sawyer_lift/base/train_dropout.yaml
+  - cfg/sawyer_lift/teachers/full_optimal.yaml
+  - cfg/behavior_policies/iris_ep.yaml
+
+experiment_name: efficiency_1full_optimal_iris_ep
