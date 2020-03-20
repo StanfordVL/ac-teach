@@ -137,11 +137,6 @@ if __name__ == "__main__":
     assert(args.type in ["random", "full", "partial", "adversarial", "midpoint"])
     assert(not args.render_video)
 
-    ### TODO: decide if we want an offscreen render option to dump rollout videos or images ###
-    ### TODO: use the type argument in a better, cleaner way to construct teachers? ###
-    ### TODO: check environment names... ###
-    ### TODO: fix the HookSweep partial case in a clean way, it will only work 25% of the time right now lol ###
-
     env = gym.make(args.env)
     env.reset()
 
