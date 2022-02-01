@@ -31,7 +31,7 @@ matplotlib==3.0.3
 mpi4py==3.0.2
 mujoco-py==1.50.1.5
 numpy==1.17.2
-opencv-python==4.1.1.26
+opencv-python==4.2.0.32
 pandas==0.24.2
 Pillow==6.1.0
 portalocker==1.5.1
