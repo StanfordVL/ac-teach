@@ -33,7 +33,7 @@ mujoco-py==1.50.1.5
 numpy==1.21.0
 opencv-python==4.2.0.32
 pandas==0.24.2
-Pillow==6.1.0
+pillow>=9.0.0
 portalocker==1.5.1
 protobuf==3.9.2
 pybullet==2.5.5
