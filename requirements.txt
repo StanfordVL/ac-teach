@@ -35,7 +35,7 @@ opencv-python==4.2.0.32
 pandas==0.24.2
 pillow>=9.0.0
 portalocker==1.5.1
-protobuf==3.9.2
+protobuf==3.18.3
 pybullet==2.5.5
 pycparser==2.19
 pyglet==1.3.2
