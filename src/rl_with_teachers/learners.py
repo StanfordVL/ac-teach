@@ -480,11 +480,14 @@ epsilon=1e-08)
                         # Evaluate.
                         eval_episode_rewards = []
                         eval_qs = []
+                        eval_successes = []
                         if self.eval_env is not None:
                             eval_episode_reward = 0.0
                             eval_steps = 0
                             discount = 1.0
-                            self.eval_env.reset()
+                            if hasattr(self.eval_env, "robosuite"):
+                                eval_success = False
+                            eval_obs = self.eval_env.reset()
                             for _ in range(self.nb_eval_steps):
                                 if total_steps >= total_timesteps:
                                     return self
@@ -497,6 +500,9 @@ epsilon=1e-08)
                                 eval_episode_reward += discount*eval_r
                                 discount*=self.gamma
 
+                                if hasattr(self.eval_env, "robosuite"):
+                                    eval_success = eval_success or self.env._check_success()
+
                                 eval_qs.append(eval_q)
                                 if eval_done:
                                     logging.info('Eval episode finished. num steps=%d, final reward=%f'%(eval_steps, eval_episode_reward ))
@@ -507,6 +513,8 @@ epsilon=1e-08)
                                     yield eval_episode_reward
                                     eval_episode_rewards.append(eval_episode_reward)
                                     eval_episode_rewards_history.append(eval_episode_reward)
+                                    if hasattr(self.eval_env, "robosuite"):
+                                        eval_successes.append(float(eval_success))
                                     eval_episode_reward = 0.
                                     discount = 1.0
                                     eval_steps=1
@@ -555,6 +563,8 @@ epsilon=1e-08)
                     if self.eval_env is not None:
                         combined_stats['eval/return'] = np.mean(eval_episode_rewards)
                         combined_stats['eval/return_history'] = np.mean(eval_episode_rewards_history)
+                        if hasattr(self.eval_env, "robosuite"):
+                            combined_stats['eval/return_success'] = np.mean(eval_successes)
                         combined_stats['eval/Q'] = np.mean(eval_qs)
                         combined_stats['eval/episodes'] = len(eval_episode_rewards)
 

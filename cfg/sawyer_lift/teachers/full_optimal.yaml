@@ -1,0 +1,6 @@
+teachers:
+  - type: optimal
+    env: SawyerLift
+    agent: "/home/robot/installed_libraries/batchRL/iris_trained_models/iris_sanity_lift_finetune/20191120164303/model_epoch_14_best_success_1.0.pth"
+    # agent: "/Users/ajaymandlekar/Desktop/Google Drive/Stanford/ccr/batchRL/iris_trained_models/iris_sanity_lift_finetune/20191120164303/model_epoch_14_best_success_1.0.pth"
+  

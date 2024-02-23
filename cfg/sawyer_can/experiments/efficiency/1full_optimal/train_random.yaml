@@ -1,0 +1,6 @@
+include:
+  - cfg/sawyer_can/base/train_dropout.yaml
+  - cfg/sawyer_can/teachers/full_optimal.yaml
+  - cfg/behavior_policies/random.yaml
+
+experiment_name: efficiency_1full_optimal_random

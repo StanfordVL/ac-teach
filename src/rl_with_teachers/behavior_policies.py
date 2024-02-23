@@ -3,9 +3,13 @@ import math
 import random
 import logging
 from abc import ABC, abstractmethod
+from gym import spaces
+from stable_baselines.deepq import DQN, LnMlpPolicy, MlpPolicy
 from stable_baselines.deepq.replay_buffer import ReplayBuffer, PrioritizedReplayBuffer
 from stable_baselines.common.schedules import LinearSchedule
 from rl_with_teachers.utils import parse_noise_types
+
+from rl_with_teachers.envs.util import create_robosuite_env
 
 def make_behavior_policy(env_id, base_env, learner, teach_behavior_policy, teachers_conf, behavior_policy_params):
     """
@@ -37,7 +41,8 @@ def make_behavior_policy(env_id, base_env, learner, teach_behavior_policy, teach
             else:
                 teacher_fns = [lambda obs: pretrained_agent.predict(obs, deterministic=False)[0]/np.abs(learner.action_space.low)]
         else:
-            teacher_fns = base_env.make_teachers(teacher_conf.pop('type'), noise, **teacher_conf)
+            print(teacher_conf)
+            teacher_fns = base_env.make_teachers(type=teacher_conf.pop('type'), noise=noise, **teacher_conf)
         teachers+=teacher_fns
 
     if teach_behavior_policy == 'random':
@@ -52,29 +57,28 @@ def make_behavior_policy(env_id, base_env, learner, teach_behavior_policy, teach
         elif env_id == 'SanityPathMujoco-v0':
             behavior_policy = OptimalReachBehaviorPolicy(learner, teachers)
 
-    elif teach_behavior_policy == 'dqn' or teach_behavior_policy == 'bdqn':
-        dqn_env = gym.make(env_id)
+    elif teach_behavior_policy == 'dqn':
+
+        # hacky support for Sawyer envs
+        if env_id.startswith("Sawyer"):
+            dqn_env = create_robosuite_env(env_id, horizon=1000)
+        else:
+            dqn_env = gym.make(env_id)
+
         if 'use_learner' not in behavior_policy_params or behavior_policy_params['use_learner']:
             dqn_env.action_space = spaces.Discrete(len(teachers)+1)
         else:
             dqn_env.action_space = spaces.Discrete(len(teachers))
-        if teach_behavior_policy == 'dqn':
-            dqn = NiceDQN(
-                    env=dqn_env,
-                    policy=MlpPolicy,
-                    **behavior_policy_params.pop('dqn_params')
-            )
 
-            dqn.exploration = LinearSchedule(schedule_timesteps=int(behavior_policy_params.pop('num_timesteps')*0.2),
-                                             initial_p=1.0,
-                                             final_p=0.02)
-            behavior_policy = DQNChoiceBehaviorPolicy(base_env, learner, teachers, dqn, **behavior_policy_params)
-        else:
-            bdqn = BDQN(
-                    env=dqn_env,
-                    **behavior_policy_params.pop('bdqn_params')
-            )
-            behavior_policy = BDQNUncertaintyBehaviorPolicy(base_env, learner, teachers, bdqn, **behavior_policy_params)
+        dqn = NiceDQN(
+                env=dqn_env,
+                policy=MlpPolicy,
+                **behavior_policy_params.pop('dqn_params')
+        )
+        dqn.exploration = LinearSchedule(schedule_timesteps=int(behavior_policy_params.pop('num_timesteps')*0.2),
+                                         initial_p=1.0,
+                                         final_p=0.02)
+        behavior_policy = DQNChoiceBehaviorPolicy(base_env, learner, teachers, dqn, **behavior_policy_params)
     elif teach_behavior_policy == 'critic':
             behavior_policy = CriticBehaviorPolicy(base_env, learner, teachers, learner, **behavior_policy_params)
     elif teach_behavior_policy == 'acteach':
@@ -273,6 +277,82 @@ class OptimalPickPlaceBehaviorPolicy(RLwTeachersBehaviorPolicy):
             index = 2
         return index, self.get_action(index, obs), 0.0
 
+class NiceDQN(DQN):
+    def __init__(self, policy, env, gamma=0.99, learning_rate=5e-4, buffer_size=50000, exploration_fraction=0.1,
+                 exploration_final_eps=0.02, train_freq=1, batch_size=32, checkpoint_freq=10000, checkpoint_path=None,
+                 learning_starts=1000, target_network_update_freq=500, prioritized_replay=False,
+                 prioritized_replay_alpha=0.6, prioritized_replay_beta0=0.4, prioritized_replay_beta_iters=None,
+                 prioritized_replay_eps=1e-6, param_noise=False, verbose=0, tensorboard_log=None,
+                 _init_setup_model=True, policy_kwargs=None, full_tensorboard_log=False):
+        super().__init__(policy, env, gamma, learning_rate, buffer_size, exploration_fraction,
+                        exploration_final_eps, train_freq, batch_size, checkpoint_freq, checkpoint_path,
+                        learning_starts, target_network_update_freq, prioritized_replay, prioritized_replay_alpha, prioritized_replay_beta0,
+                         prioritized_replay_beta_iters, prioritized_replay_eps, param_noise, verbose, tensorboard_log,
+                        _init_setup_model, policy_kwargs, full_tensorboard_log)
+        if self.prioritized_replay:
+            self.replay_buffer = PrioritizedReplayBuffer(self.buffer_size, alpha=self.prioritized_replay_alpha)
+            prioritized_replay_beta_iters = self.prioritized_replay_beta_iters
+            self.beta_schedule = LinearSchedule(prioritized_replay_beta_iters,
+                                            initial_p=self.prioritized_replay_beta0,
+                                            final_p=1.0)
+        else:
+            self.replay_buffer = ReplayBuffer(self.buffer_size)
+            self.beta_schedule = None
+
+    def store_transition(self, obs0, action, reward, obs1, terminal1):
+        """
+        Store a transition in the replay buffer
+        :param obs0: ([float] or [int]) the last observation
+        :param action: ([float]) the action
+        :param reward: (float] the reward
+        :param obs1: ([float] or [int]) the current observation
+        :param terminal1: (bool) is the episode done
+        """
+        self.replay_buffer.add(obs0, action, reward, obs1, float(terminal1))
+
+    def replay_train(self, writer=None):
+        if self.prioritized_replay:
+            experience = self.replay_buffer.sample(self.batch_size,
+                                                   beta=self.beta_schedule.value(self.num_timesteps))
+            (obses_t, actions, rewards, obses_tp1, dones, weights, batch_idxes) = experience
+        else:
+            obses_t, actions, rewards, obses_tp1, dones = self.replay_buffer.sample(self.batch_size)
+            weights, batch_idxes = np.ones_like(rewards), None
+
+        if writer is not None:
+            # run loss backprop with summary, but once every 100 steps save the metadata
+            # (memory, compute time, ...)
+            if (1 + self.num_timesteps) % 1000 == 0:
+                run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+                run_metadata = tf.RunMetadata()
+                summary, td_errors = self._train_step(obses_t, actions, rewards, obses_tp1, obses_tp1,
+                                                      dones, weights, sess=self.sess, options=run_options,
+                                                      run_metadata=run_metadata)
+                writer.add_run_metadata(run_metadata, 'step%d' % self.num_timesteps)
+            else:
+                summary, td_errors = self._train_step(obses_t, actions, rewards, obses_tp1, obses_tp1,
+                                                      dones, weights, sess=self.sess)
+            writer.add_summary(summary, self.num_timesteps)
+        else:
+            _, td_errors = self._train_step(obses_t, actions, rewards, obses_tp1, obses_tp1,
+                                                      dones, weights, sess=self.sess)
+
+        if self.prioritized_replay:
+            new_priorities = np.abs(td_errors) + self.prioritized_replay_eps
+            self.replay_buffer.update_priorities(batch_idxes, new_priorities)
+
+    def store_and_train(self, obs, action, reward, new_obs, done, writer=None):
+        self.store_transition(obs, action, reward, new_obs, done)
+        if self.num_timesteps > self.learning_starts and self.num_timesteps % self.train_freq == 0:
+            # Minimize the error in Bellman's equation on a batch sampled from replay buffer.
+            self.replay_train(writer)
+
+        if self.num_timesteps > self.learning_starts and \
+            self.num_timesteps % self.target_network_update_freq == 0:
+            self.update_target(sess=self.sess)
+
+        self.num_timesteps+=1
+
 class DQNChoiceBehaviorPolicy(RLwTeachersBehaviorPolicy):
     """
     A behavioral policy that chooses the policy by training a DQN to make the choice.
@@ -286,7 +366,7 @@ class DQNChoiceBehaviorPolicy(RLwTeachersBehaviorPolicy):
     :param use_learner: (bool) Whether learner should be counted as one of the policies to use or not
     """
 
-    def __init__(self, env, learner, teachers, dqn, commit_time = 0, do_exploration=True, use_learner=True):
+    def __init__(self, env, learner, teachers, dqn, commit_time = 0, do_exploration=True, use_learner=True, policy_choice_repeat=1):
         super(DQNChoiceBehaviorPolicy, self).__init__(env, learner, teachers, use_learner=use_learner)
         self.num_train_steps = 0
         self.num_choice_steps = 0
@@ -296,9 +376,30 @@ class DQNChoiceBehaviorPolicy(RLwTeachersBehaviorPolicy):
         self.current_commit_time = 0
         self.current_choice = None
 
+        # for repeating actions from the same policy for several timesteps
+        self.policy_choice_repeat = policy_choice_repeat
+        self.policy_choice_count = 0
+
+        assert(policy_choice_repeat == 30)
+
     def choose_action(self, obs):
         with self.dqn.sess.as_default():
             _, q_values, _ = self.dqn.step_model.step(obs[None], deterministic = True)
+
+            ### added, for repeating actions from the same policy for several timesteps ###
+            if (self.current_choice is not None) and (self.policy_choice_repeat > 1):
+                self.policy_choice_count += 1
+
+                if self.policy_choice_count == self.policy_choice_repeat:
+                    # refresh count and allow new teacher
+                    self.policy_choice_count = 0
+                else:
+                    # keep old policy choice
+                    agent_choice = self.current_choice
+                    q_val = q_values[0][agent_choice]
+                    self.num_choice_steps+=1
+                    return agent_choice, self.get_action(agent_choice, obs, with_exploration=True), q_val
+
             if self.current_commit_time > 0:
                 agent_choice = self.current_choice
                 self.current_commit_time-=1
@@ -313,6 +414,7 @@ class DQNChoiceBehaviorPolicy(RLwTeachersBehaviorPolicy):
                     agent_choice = np.argmax(q_values[0])
                 self.current_choice = agent_choice
                 self.current_commit_time = self.commit_time
+
             q_val = q_values[0][agent_choice]
             self.num_choice_steps+=1
             return agent_choice, self.get_action(agent_choice, obs, with_exploration=True), q_val
@@ -331,6 +433,7 @@ class DQNChoiceBehaviorPolicy(RLwTeachersBehaviorPolicy):
         super().reset()
         self.current_commit_time = 0
         self.current_choice = None
+        self.policy_choice_count = 0
 
     def step_learn(self, obs, policy_choice, reward, new_obs, done):
         """ Given memory of past transitions, train the selection behavior_policy.
@@ -388,7 +491,9 @@ class ACTeachBehaviorPolicy(RLwTeachersBehaviorPolicy):
     def __init__(self, env, learner, teachers, uncertainty_model,
                        use_learner=True,
                        commitment_thresh=0.6, with_commitment = True,
-                       decay_commitment=True, commitment_decay_coeff = 0.99):
+                       decay_commitment=True, commitment_decay_coeff = 0.99,
+                       policy_choice_repeat=1,
+                       random_episode_choice=False):
         super(ACTeachBehaviorPolicy, self).__init__(env, learner, teachers, use_learner=use_learner)
         self.num_choice_steps = 0
         self.uncertainty_model = uncertainty_model
@@ -398,6 +503,18 @@ class ACTeachBehaviorPolicy(RLwTeachersBehaviorPolicy):
         self.num_steps_commited = 0
         self.decay_commitment = decay_commitment
         self.commitment_decay_coeff = commitment_decay_coeff
+
+        # for repeating actions from the same policy for several timesteps
+        self.policy_choice_repeat = policy_choice_repeat
+        self.policy_choice_count = 0
+
+        # for randomly selecting an agent and keeping it fixed the whole episode
+        self.random_episode_choice = random_episode_choice
+        if self.random_episode_choice:
+            num_choices = len(self.teachers) + 1
+            self.episode_agent_choice = np.random.randint(num_choices)
+
+        assert(policy_choice_repeat == 30)
 
     def choose_action(self, obs):
         learner_action = self.get_action(0, obs, with_exploration=True)
@@ -414,10 +531,32 @@ class ACTeachBehaviorPolicy(RLwTeachersBehaviorPolicy):
         logging.info('Policy actions at state are %s'%str(actions))
         logging.info('Critic evaluation of policy actions is %s'%str(np.squeeze(qs)))
 
+        ### added, for keeping one teacher fixed throughout an episode ###
+        if self.random_episode_choice:
+            agent_choice = self.episode_agent_choice
+            self.num_choice_steps += 1
+            return agent_choice, actions[agent_choice], qs[agent_choice]
+
         max_q_choice = np.argmax(qs)
         if self.current_policy_choice is None:
             self.current_policy_choice = max_q_choice
 
+        ### added, for repeating actions from the same policy for several timesteps ###
+        if self.policy_choice_repeat > 1:
+            self.policy_choice_count += 1
+
+            if self.policy_choice_count >= self.policy_choice_repeat:
+                # refresh count and allow new teacher
+                self.policy_choice_count = 0
+            else:
+                # keep old policy choice
+                agent_choice = self.current_policy_choice
+                self.num_choice_steps += 1
+                return agent_choice, actions[agent_choice], qs[agent_choice]
+
+        # # uncomment this and comment block below to always select the teacher
+        # agent_choice = 1
+        
         # If using commitment and current max choice is not same as last time, need to choose whether to switch
         if self.with_commitment and self.current_policy_choice != max_q_choice:
             current_qs = self.uncertainty_model.q_values(obs[None], actions[self.current_policy_choice][None])
@@ -479,3 +618,8 @@ class ACTeachBehaviorPolicy(RLwTeachersBehaviorPolicy):
         super().reset()
         self.current_policy_choice = None
         self.num_steps_commited = 0
+        self.policy_choice_count = 0
+
+        if self.random_episode_choice:
+            num_choices = len(self.teachers) + 1
+            self.episode_agent_choice = np.random.randint(num_choices)
